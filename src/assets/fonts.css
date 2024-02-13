@@ -1,0 +1,6 @@
+@font-face {
+	font-family: "TT Interphases Pro Variable";
+	src: url("./fonts/TT Interphases Pro Trial Bold.ttf") format("truetype"),
+		url("./fonts/TT Interphases Pro Trial Medium.ttf") format("truetype"),
+		url("./fonts/TT Interphases Pro Trial Regular.ttf") format("truetype");
+}
