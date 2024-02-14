@@ -16,6 +16,7 @@
 			</button>
 
 			<button
+				@click="remove"
 				class="h-[30px] w-[144px] bg-white hover:bg-[#E1F1FF] text-sm font-normal flex items-center"
 			>
 				<img class="w-5 h-5 mx-2" src="../assets/icons/trash.svg" alt="trash" />
@@ -27,10 +28,13 @@
 
 <script setup>
 import { defineEmits } from "vue"
-const emit = defineEmits(["editItem"])
+const emit = defineEmits(["editItem", "onRemove"])
 
 function handleEdit() {
 	emit("editItem")
+}
+function remove() {
+	emit("onRemove")
 }
 </script>
 <style></style>

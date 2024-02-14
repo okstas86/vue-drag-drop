@@ -1,15 +1,15 @@
 <template>
-	<div class="w-full h-full flex p-5 bg-gray-100 overflow-x-auto">
+	<div class="w-full h-[100vh] bg-white flex p-5 overflow-x-auto">
 		<div
 			v-for="category in categories"
 			:key="category.id"
 			@drop="onDrop($event, category.id)"
 			@dragover.prevent
 			@dragenter.prevent
-			class="droppable w-[184px] h-full m-1 border-2 border-[#E3E5E8] border-t-0 bg-white rounded-lg flex flex-col"
+			class="droppable flex items-center w-[184px] h-full m-1 border-2 border-[#E3E5E8] border-t-0 bg-[#F7F7F7] rounded-lg flex flex-col"
 		>
 			<div
-				class="rounded-t-lg w-[180px] mb-2"
+				class="rounded-t-lg w-[184px] mb-2 bg-gray-300"
 				:style="getCategoryClass(category.id)"
 			>
 				<h4
@@ -43,7 +43,7 @@
 				</h5>
 				<button @click="handleOpenModal(item.id)">
 					<img
-						v-if="!showModal && !showEditIcon"
+						v-if="!showModalEdit && !showEditIcon"
 						class="absolute w-5 h-5 top-1 right-2"
 						src="../assets/icons/more-horizontal.svg"
 					/>
@@ -60,13 +60,14 @@
 					</button>
 				</div>
 				<ModalEdit
-					v-if="showModal && showModalId === item.id"
+					v-if="showModalEdit && showModalId === item.id"
 					class="absolute right-[-165px] top-0"
 					@editItem="handleEditItem(item)"
+					@onRemove="confirmRemove(item.id)"
 				/>
 
 				<textarea
-					class="bg-white w-[110px] text-[#1C2530] focus:outline-none"
+					class="bg-white w-[110px] text-[#1C2530] text-sm focus:outline-none placeholder:text-[#86949E]"
 					v-if="item.editing"
 					placeholder="Введите текст"
 					v-model="item.editedTitle"
@@ -76,28 +77,82 @@
 					rows="4"
 				/>
 			</div>
-			<button @click="addNewItem(category.id)" class="m-2 text-white">
-				<img src="../assets/icons/plus.svg" alt="plus" />
-				<p>Добавить</p>
-			</button>
+
+			<div>
+				<button
+					v-if="category.showAddButton"
+					@click="addNewItem(category.id)"
+					class="flex mt-2 ml-[-60px]"
+				>
+					<img src="../assets/icons/plus.svg" alt="plus" class="ml-2" />
+					<p class="text-[#3D86F4] text-sm font-normal">Добавить</p>
+				</button>
+			</div>
 		</div>
 		<div>
 			<button
 				@click="addNewCategory"
-				class="m-5 bg-gray-500 text-white p-2 rounded-md min-w-[200px]"
+				class="flex m-5 bg-white text-white p-2 rounded-md min-w-[200px]"
 			>
-				Add another column
+				<img class="ml-2" src="../assets/icons/plus.svg" alt="plus" />
+				<p class="text-[#3D86F4] text-sm font-normal">Добавить колонку</p>
 			</button>
 		</div>
+		<div
+			class="absolute inset-0 flex items-center justify-center w-full h-[100vh] bg-black opacity-60"
+			v-if="openModalRemove"
+		></div>
+		<div
+			v-if="openModalRemove"
+			class="absolute inset-0 flex items-center justify-center w-full h-[100vh]"
+		>
+			<div
+				class="relative w-[500px] h-[196px] bg-white opacity-100 p-[30px] z-100"
+			>
+				<h2 class="text-2xl ml-5 mb-2">Удалить задачу?</h2>
+				<p class="text-sm font-normal ml-5 mb-7">{{ removeItem.title }}</p>
+				<div class="flex mx-[20px] gap-5">
+					<button
+						class="w-[202px] h-[36px] border rounded-md"
+						@click="deleteItem(removeItem.id)"
+					>
+						Удалить
+					</button>
+					<button
+						class="w-[202px] h-[36px] border rounded-md"
+						@click="cancelDelete"
+					>
+						Отменить
+					</button>
+					<button
+						@click="cancelDelete"
+						class="absolute flex items-center justify-center right-5 top-5"
+					>
+						<img class="" src="../assets/icons/close.svg" alt="close" />
+					</button>
+				</div>
+			</div>
+		</div>
+		<ModalInfo
+			v-if="showModalInfo"
+			:title="newItemTitle"
+			class="absolute bottom-10 right-10"
+		/>
 	</div>
 </template>
 
 <script setup>
 import { ref } from "vue"
 import ModalEdit from "./ModalEdit.vue"
-const showModal = ref(false)
+import ModalInfo from "./ModalInfo.vue"
+
+const showModalEdit = ref(false)
 const showModalId = ref(null)
 const showEditIcon = ref(false)
+const showAddButton = ref(true)
+const openModalRemove = ref(false)
+const showModalInfo = ref(false)
+const action = ""
 
 const items = ref([
 	{
@@ -125,43 +180,49 @@ const categories = ref([
 		title: "На согласовании",
 		color: "#FF65DD",
 		editing: false,
+		showAddButton: true,
 	},
 	{
 		id: 1,
 		title: "Новые",
 		color: "#33A0FF",
 		editing: false,
+		showAddButton: true,
 	},
 	{
 		id: 2,
 		title: "В процессе",
 		color: "#FFC633",
 		editing: false,
+		showAddButton: true,
 	},
 	{
 		id: 3,
 		title: "Готово",
 		color: "#22C33D",
 		editing: false,
+		showAddButton: true,
 	},
 	{
 		id: 4,
 		title: "Доработать",
 		color: "#F53D5C",
 		editing: false,
+		showAddButton: true,
 	},
 ])
 
 let newItemTitle = ""
+let removeItem = {}
 
 function handleOpenModal(id) {
-	showModal.value = !showModal.value
+	showModalEdit.value = !showModalEdit.value
 	showModalId.value = id
 }
 
 function handleEditItem(editedItem) {
 	showEditIcon.value = true
-	showModal.value = false
+	showModalEdit.value = false
 
 	const item =
 		typeof editedItem === "number"
@@ -181,8 +242,14 @@ function onDragStart(e, item) {
 }
 function onDrop(e, categoryId) {
 	const itemId = parseInt(e.dataTransfer.getData("itemId"))
+	showModalInfo.value = true
+	setTimeout(() => {
+		showModalInfo.value = false
+	}, 2000)
+
 	items.value = items.value.map(item => {
 		if (item.id === itemId) item.categoryId = categoryId
+
 		return item
 	})
 }
@@ -195,17 +262,42 @@ function addNewCategory() {
 	categories.value = [...categories.value, newCategory]
 }
 
+function updateShowAddButton(categoryId, value) {
+	const categoryIndex = categories.value.findIndex(
+		category => category.id === categoryId
+	)
+	if (categoryIndex !== -1) {
+		categories.value[categoryIndex].showAddButton = value
+	}
+}
+
 function addNewItem(categoryId) {
 	const newItemId = items.value.length
+
 	const newItem = {
 		id: newItemId,
 		title: `Введите текст`,
 		categoryId: categoryId,
-		editing: false,
+		editing: true,
 		editedTitle: "",
 	}
+
 	items.value = [...items.value, newItem]
-	newItemTitle = ""
+
+	showModalId.value = newItemId
+	newItemTitle = newItem.title
+
+	showEditIcon.value = true
+
+	updateShowAddButton(categoryId, false)
+
+	// newItemTitle = ""
+	if (newItem.editing === false) {
+		showModalInfo.value = true
+		setTimeout(() => {
+			showModalInfo.value = false
+		}, 2000)
+	}
 }
 
 function startEditing(item) {
@@ -216,17 +308,47 @@ function startEditing(item) {
 function stopEditing(item) {
 	item.editing = false
 	item.title = item.editedTitle
+	newItemTitle = item.title
+
 	showEditIcon.value = false
+	updateShowAddButton(item.categoryId, true)
+	showModalInfo.value = true
+	setTimeout(() => {
+		showModalInfo.value = false
+	}, 2000)
 }
 
 function cancelEditing(item) {
 	item.editing = false
-	// item.editedTitle = item.title
 	showEditIcon.value = false
+	updateShowAddButton(item.categoryId, true)
+	showModalInfo.value = true
+	setTimeout(() => {
+		showModalInfo.value = false
+	}, 2000)
+}
+
+function confirmRemove(itemId) {
+	showModalEdit.value = false
+	openModalRemove.value = true
+	const deletedItem = items.value.find(item => item.id === itemId)
+	removeItem = deletedItem
+}
+
+function deleteItem(removeId) {
+	items.value = items.value.filter(item => item.id !== removeId)
+	openModalRemove.value = false
+	showModalInfo.value = true
+	setTimeout(() => {
+		showModalInfo.value = false
+	}, 2000)
+}
+function cancelDelete() {
+	openModalRemove.value = false
 }
 
 function getCategoryClass(categoryId) {
 	const category = categories.value.find(item => item.id === categoryId)
-	return category ? { "background-color": category.color } : "default-class"
+	return category ? { "background-color": category.color } : ""
 }
 </script>
