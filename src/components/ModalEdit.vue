@@ -1,5 +1,5 @@
 <template>
-	<div class="w-[144px] h-[86px] z-10">
+	<div class="absolute left-[165px] top-0 z-50 w-[144px] h-[86px]">
 		<img
 			style="stroke: #fff"
 			class="text-red-300 w-6"
@@ -37,4 +37,3 @@ function remove() {
 	emit("onRemove")
 }
 </script>
-<style></style>

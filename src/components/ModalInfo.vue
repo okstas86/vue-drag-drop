@@ -4,9 +4,9 @@
 		<div class="w-[64px] h-[56px] flex items-center justify-center">
 			<img class="w-6 h-6" src="../assets/icons/done.svg" alt="done" />
 		</div>
-		<div>
-			<h4 class="my-2 text-md">Задача Процесс</h4>
-			<p class="text-sm">{{ title }}</p>
+		<div class="w-[336px] overflow-y-auto p-1">
+			<h4 class="my-1 text-md">{{ actionText }}</h4>
+			<p class="text-sm my-1 mb-1 mr-2 overflow-y-auto">{{ title }}</p>
 		</div>
 	</div>
 </template>
@@ -14,7 +14,5 @@
 <script setup>
 import { defineProps } from "vue"
 
-const { title } = defineProps(["title"])
-
-console.log(title)
+const { title, actionText } = defineProps(["title", "actionText"])
 </script>
